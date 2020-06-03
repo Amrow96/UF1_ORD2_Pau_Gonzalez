@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuari;
 use Illuminate\Http\Request;
+use App\Clases\Utilitats;
+
+use Illuminate\Database\QueryException;
+
 
 class UsuariController extends Controller
 {
@@ -12,9 +16,23 @@ class UsuariController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        //Si la request es de search implementaremos este codigo
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $usuari = Usuari::where('nom', 'like', '%' . $search . '%')
+                ->orderby('nom')
+                ->paginate(5);
+        } else {
+            //En caso de hacer una busqueda vacia
+            $search = '';
+            $usuari = Usuari::orderby('nom')->paginate(5);
+        }
+
+        $data['actores'] = $usuari;
+        $data['search'] = $search;
+        return view('usuari.index', $data);
     }
 
     /**
@@ -24,8 +42,13 @@ class UsuariController extends Controller
      */
     public function create()
     {
-        //
+        //Capturamos todos los usuarios y los enviamos a la nueva vista
+        $usuario = Usuari::all();
+        $data['usuari'] = $usuario;
+
+        return view('usuari.create', $data);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -35,7 +58,21 @@ class UsuariController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $usuari = new Usuari();
+        $usuari->nom = $request->input('nom');
+        $usuari->password = $request->input('password');
+        $usuari->username = $request->input('username');
+
+        try {
+            $usuari->save();
+        } catch (QueryException $e) {
+            $error = Utilitats::errorMessage($e);
+            $request->session()->flash('error', $error);
+            //En caso de error al guardar iremos al formulario de inserción con los datos introducidos
+            return redirect()->action('UsuariController@create')->withImput();
+        }
+        //Volveremos al index
+        return redirect()->action('UsuariController@index');
     }
 
     /**
@@ -57,7 +94,10 @@ class UsuariController extends Controller
      */
     public function edit(Usuari $usuari)
     {
-        //
+        //Capturamos el usuario y lo redirigimos al edit
+        $data['usuari'] = $usuari;
+
+        return view('usuari.edit', $data);
     }
 
     /**
@@ -69,7 +109,20 @@ class UsuariController extends Controller
      */
     public function update(Request $request, Usuari $usuari)
     {
-        //
+        $usuari->nom = $request->input('nom');
+        $usuari->password = $request->input('password');
+        $usuari->username = $request->input('username');
+
+        try {
+            $usuari->save();
+        } catch (QueryException $e) {
+            $error = Utilitats::errorMessage($e);
+            $request->session()->flash('error', $error);
+            //En caso de error al guardar iremos al formulario de modificación con los datos introducidos
+            return redirect()->action('UsuariController@edit')->withImput();
+        }
+        //Volveremos al index
+        return redirect()->action('UsuariController@index');
     }
 
     /**
@@ -80,6 +133,8 @@ class UsuariController extends Controller
      */
     public function destroy(Usuari $usuari)
     {
-        //
+        //Eliminamos el usuario que nos envian
+        $usuari->delete();
+        return redirect()->action('UsuariController@index');
     }
 }
