@@ -60,7 +60,7 @@ class UsuariController extends Controller
     {
         $usuari = new Usuari();
         $usuari->nom = $request->input('nom');
-        $usuari->password = $request->input('password');
+        $usuari->pasword = $request->input('pasword');
         $usuari->username = $request->input('username');
 
         try {
@@ -110,7 +110,7 @@ class UsuariController extends Controller
     public function update(Request $request, Usuari $usuari)
     {
         $usuari->nom = $request->input('nom');
-        $usuari->password = $request->input('password');
+        $usuari->pasword = $request->input('pasword');
         $usuari->username = $request->input('username');
 
         try {
