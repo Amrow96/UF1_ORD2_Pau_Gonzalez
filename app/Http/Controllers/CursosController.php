@@ -26,7 +26,7 @@ class CursosController extends Controller
         } else {
             //En caso de hacer una busqueda vacia
             $search = '';
-            $curs = Cursos::orderby('nom')->paginate(5);
+            $curs = Cursos::orderby('nombre')->paginate(5);
         }
 
         $data['curs'] = $curs;
