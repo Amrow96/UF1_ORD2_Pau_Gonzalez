@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Cursos;
 use Illuminate\Http\Request;
+use App\Clases\Utilitats;
+use App\Models\Usuari;
+use Illuminate\Database\QueryException;
 
 class CursosController extends Controller
 {
@@ -12,9 +15,23 @@ class CursosController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        //Si la request es de search implementaremos este codigo
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $curs = Cursos::where('nombre', 'like', '%' . $search . '%')
+                ->orderby('nombre')
+                ->paginate(5);
+        } else {
+            //En caso de hacer una busqueda vacia
+            $search = '';
+            $curs = Cursos::orderby('nom')->paginate(5);
+        }
+
+        $data['curs'] = $curs;
+        $data['search'] = $search;
+        return view('curs.index', $data);
     }
 
     /**
@@ -24,7 +41,11 @@ class CursosController extends Controller
      */
     public function create()
     {
-        //
+        //Capturamos todos los usuarios y los mandamos al create de cursos
+        $usuaris = Usuari::all();
+        $data['usuaris'] = $usuaris;
+
+        return view('curs.create', $data);
     }
 
     /**
@@ -35,7 +56,22 @@ class CursosController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $curso = new Cursos();
+        $curso->codigo = $request->input('codigo');
+        $curso->nombre = $request->input('nombre');
+        $curso->descripcion = $request->input('descripcion');
+        $curso->usuario_username = $request->input('usuario_username');
+
+        try {
+            $curso->save();
+        } catch (QueryException $e) {
+            $error = Utilitats::errorMessage($e);
+            $request->session()->flash('error', $error);
+            //En caso de error al guardar iremos al formulario de inserción con los datos introducidos
+            return redirect()->action('CursosController@create')->withImput();
+        }
+
+        return redirect()->action('CursosController@index');
     }
 
     /**
@@ -55,9 +91,14 @@ class CursosController extends Controller
      * @param  \App\Models\Cursos  $cursos
      * @return \Illuminate\Http\Response
      */
-    public function edit(Cursos $cursos)
-    {
-        //
+    public function edit(Cursos $curso)
+    {        //Capturamos el curso y los usuarios y lo redirigimos al edit
+
+        $usuaris = Usuari::all();
+
+        $data['usuaris'] = $usuaris;
+        $data['curso'] = $curso;
+        return view('curs.edit', $data);
     }
 
     /**
@@ -67,9 +108,23 @@ class CursosController extends Controller
      * @param  \App\Models\Cursos  $cursos
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Cursos $cursos)
+    public function update(Request $request, Cursos $curso)
     {
-        //
+        $curso->codigo = $request->input('codigo');
+        $curso->nombre = $request->input('nombre');
+        $curso->descripcion = $request->input('descripcion');
+        $curso->usuario_username = $request->input('usuario_username');
+
+        try {
+            $curso->save();
+        } catch (QueryException $e) {
+            $error = Utilitats::errorMessage($e);
+            $request->session()->flash('error', $error);
+            //En caso de error al guardar iremos al formulario de inserción con los datos introducidos
+            return redirect()->action('CursosController@edit')->withImput();
+        }
+
+        return redirect()->action('CursosController@index');
     }
 
     /**
@@ -78,8 +133,9 @@ class CursosController extends Controller
      * @param  \App\Models\Cursos  $cursos
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Cursos $cursos)
+    public function destroy(Cursos $curso)
     {
-        //
+        $curso->delete();
+        return redirect()->action('CursosController@index');
     }
 }

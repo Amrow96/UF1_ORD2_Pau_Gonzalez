@@ -30,7 +30,7 @@ class UsuariController extends Controller
             $usuari = Usuari::orderby('nom')->paginate(5);
         }
 
-        $data['actores'] = $usuari;
+        $data['usuari'] = $usuari;
         $data['search'] = $search;
         return view('usuari.index', $data);
     }
@@ -44,7 +44,7 @@ class UsuariController extends Controller
     {
         //Capturamos todos los usuarios y los enviamos a la nueva vista
         $usuario = Usuari::all();
-        $data['usuari'] = $usuario;
+        $data['usuaris'] = $usuario;
 
         return view('usuari.create', $data);
     }
