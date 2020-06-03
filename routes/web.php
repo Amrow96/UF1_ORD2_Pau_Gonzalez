@@ -14,3 +14,7 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::resource('/cursos', 'CursosController');
+Route::resource('/usuaris', 'UsuariController');
